@@ -1,0 +1,278 @@
+{
+  "cenario_1_sucesso": {
+    "descricao": "Execucao limpa. Processos respeitam a ACL e nao geram Deadlock.",
+    "acl": {
+      "relatorio.pdf": {"admin": ["R", "W"], "estagiario": ["R"]}
+    },
+    "processos": [
+      {
+        "nome": "P1_Admin", "usuario": "admin",
+        "passos": [
+          {"acao": "bloquear", "arquivo": "relatorio.pdf", "modo": "W"},
+          {"acao": "processar", "tempo": 1.0},
+          {"acao": "liberar", "arquivo": "relatorio.pdf"}
+        ]
+      },
+      {
+        "nome": "P2_Estagiario", "usuario": "estagiario",
+        "passos": [
+          {"acao": "bloquear", "arquivo": "relatorio.pdf", "modo": "R"},
+          {"acao": "liberar", "arquivo": "relatorio.pdf"}
+        ]
+      }
+    ]
+  },
+  "cenario_2_deadlock_resolvido": {
+    "descricao": "Gera um Deadlock classico (A espera B, B espera A). O Monitor de SO deve detectar e abortar um deles.",
+    "acl": {
+      "db_clientes.dat": {"sistema": ["R", "W"]},
+      "db_vendas.dat": {"sistema": ["R", "W"]}
+    },
+    "processos": [
+      {
+        "nome": "Thread_Sync_A", "usuario": "sistema",
+        "passos": [
+          {"acao": "bloquear", "arquivo": "db_clientes.dat", "modo": "W"},
+          {"acao": "processar", "tempo": 0.5},
+          {"acao": "bloquear", "arquivo": "db_vendas.dat", "modo": "W"},
+          {"acao": "liberar", "arquivo": "db_clientes.dat"},
+          {"acao": "liberar", "arquivo": "db_vendas.dat"}
+        ]
+      },
+      {
+        "nome": "Thread_Sync_B", "usuario": "sistema",
+        "passos": [
+          {"acao": "bloquear", "arquivo": "db_vendas.dat", "modo": "W"},
+          {"acao": "processar", "tempo": 0.5},
+          {"acao": "bloquear", "arquivo": "db_clientes.dat", "modo": "W"},
+          {"acao": "liberar", "arquivo": "db_vendas.dat"},
+          {"acao": "liberar", "arquivo": "db_clientes.dat"}
+        ]
+      }
+    ]
+  },
+  "cenario_3_barrado_pela_acl": {
+    "descricao": "Testa a seguranca do SO. Um processo tenta acessar um arquivo sem permissao na ACL e deve ser abortado imediatamente.",
+    "acl": {
+      "folha_pagamento.key": {"diretor": ["R", "W"], "estagiario": []}
+    },
+    "processos": [
+      {
+        "nome": "P_Curioso", "usuario": "estagiario",
+        "passos": [
+          {"acao": "bloquear", "arquivo": "folha_pagamento.key", "modo": "R"},
+          {"acao": "processar", "tempo": 1.0}
+        ]
+      },
+      {
+        "nome": "P_Diretor", "usuario": "diretor",
+        "passos": [
+          {"acao": "bloquear", "arquivo": "folha_pagamento.key", "modo": "W"},
+          {"acao": "processar", "tempo": 0.2},
+          {"acao": "liberar", "arquivo": "folha_pagamento.key"}
+        ]
+      }
+    ]
+  },
+  "cenario_4_deadlock_triplo": {
+    "descricao": "Deadlock complexo em anel envolvendo 3 processos (A espera B, B espera C, C espera A). O Monitor deve quebrar o ciclo.",
+    "acl": {
+      "recurso_1.sys": {"sistema": ["R", "W"]},
+      "recurso_2.sys": {"sistema": ["R", "W"]},
+      "recurso_3.sys": {"sistema": ["R", "W"]}
+    },
+    "processos": [
+      {
+        "nome": "Proc_Alfa", "usuario": "sistema",
+        "passos": [
+          {"acao": "bloquear", "arquivo": "recurso_1.sys", "modo": "W"},
+          {"acao": "processar", "tempo": 0.4},
+          {"acao": "bloquear", "arquivo": "recurso_2.sys", "modo": "W"},
+          {"acao": "liberar", "arquivo": "recurso_1.sys"}
+        ]
+      },
+      {
+        "nome": "Proc_Beta", "usuario": "sistema",
+        "passos": [
+          {"acao": "bloquear", "arquivo": "recurso_2.sys", "modo": "W"},
+          {"acao": "processar", "tempo": 0.4},
+          {"acao": "bloquear", "arquivo": "recurso_3.sys", "modo": "W"},
+          {"acao": "liberar", "arquivo": "recurso_2.sys"}
+        ]
+      },
+      {
+        "nome": "Proc_Gama", "usuario": "sistema",
+        "passos": [
+          {"acao": "bloquear", "arquivo": "recurso_3.sys", "modo": "W"},
+          {"acao": "processar", "tempo": 0.4},
+          {"acao": "bloquear", "arquivo": "recurso_1.sys", "modo": "W"},
+          {"acao": "liberar", "arquivo": "recurso_3.sys"}
+        ]
+      }
+    ]
+  },
+  "cenario_5_alta_concorrencia_sem_deadlock": {
+    "descricao": "Varios processos disputam o mesmo recurso em momentos levemente assincronos. Deve rodar ate o fim sem deadlocks.",
+    "acl": {
+      "banco_dados.db": {"usuario_comum": ["R", "W"]}
+    },
+    "processos": [
+      {
+        "nome": "Leitor_1", "usuario": "usuario_comum",
+        "passos": [
+          {"acao": "bloquear", "arquivo": "banco_dados.db", "modo": "R"},
+          {"acao": "processar", "tempo": 0.3},
+          {"acao": "liberar", "arquivo": "banco_dados.db"}
+        ]
+      },
+      {
+        "nome": "Escritor_1", "usuario": "usuario_comum",
+        "passos": [
+          {"acao": "processar", "tempo": 0.1},
+          {"json_comentario": "Atraso proposital para escalonamento"},
+          {"acao": "bloquear", "arquivo": "banco_dados.db", "modo": "W"},
+          {"acao": "processar", "tempo": 0.3},
+          {"acao": "liberar", "arquivo": "banco_dados.db"}
+        ]
+      },
+      {
+        "nome": "Leitor_2", "usuario": "usuario_comum",
+        "passos": [
+          {"acao": "processar", "tempo": 0.2},
+          {"acao": "bloquear", "arquivo": "banco_dados.db", "modo": "R"},
+          {"acao": "processar", "tempo": 0.2},
+          {"acao": "liberar", "arquivo": "banco_dados.db"}
+        ]
+      }
+    ]
+  },
+  "cenario_6_recurso_inexistente_na_acl": {
+    "descricao": "Processo tenta acessar um arquivo que sequer foi mapeado no dicionario da ACL. O sistema deve negar o acesso com seguranca.",
+    "acl": {
+      "arquivo_valido.txt": {"admin": ["R"]}
+    },
+    "processos": [
+      {
+        "nome": "P_Invasor", "usuario": "admin",
+        "passos": [
+          {"acao": "bloquear", "arquivo": "arquivo_fantasma.txt", "modo": "R"}
+        ]
+      }
+    ]
+  },
+    "cenario_7_estresse_de_leitura": {
+      "descricao": "Concorrencia massiva sem Deadlock. Muitos usuarios lendo o mesmo arquivo ao mesmo tempo e apenas um tentando escrever. Testa o gargalo do Lock.",
+      "acl": {
+        "noticias.txt": {"jornalista": ["R", "W"], "leitor": ["R"]}
+      },
+      "processos": [
+        {
+          "nome": "Leitor_1", "usuario": "leitor",
+          "passos": [
+            {"acao": "bloquear", "arquivo": "noticias.txt", "modo": "R"},
+            {"acao": "processar", "tempo": 0.2},
+            {"acao": "liberar", "arquivo": "noticias.txt"}
+          ]
+        },
+        {
+          "nome": "Leitor_2", "usuario": "leitor",
+          "passos": [
+            {"acao": "bloquear", "arquivo": "noticias.txt", "modo": "R"},
+            {"acao": "processar", "tempo": 0.3},
+            {"acao": "liberar", "arquivo": "noticias.txt"}
+          ]
+        },
+        {
+          "nome": "Jornalista_Vip", "usuario": "jornalista",
+          "passos": [
+            {"acao": "processar", "tempo": 0.1},
+            {"acao": "bloquear", "arquivo": "noticias.txt", "modo": "W"},
+            {"acao": "processar", "tempo": 1.0},
+            {"acao": "liberar", "arquivo": "noticias.txt"}
+          ]
+        },
+        {
+          "nome": "Leitor_3", "usuario": "leitor",
+          "passos": [
+            {"acao": "bloquear", "arquivo": "noticias.txt", "modo": "R"},
+            {"acao": "processar", "tempo": 0.1},
+            {"acao": "liberar", "arquivo": "noticias.txt"}
+          ]
+        }
+      ]
+    },
+    "cenario_8_invasao_hacker_acl": {
+      "descricao": "Varios processos maliciosos tentando acessar arquivos vitais do sistema. O sistema deve abortar todos os acessos via ACL antes mesmo de tocarem nos Locks.",
+      "acl": {
+        "shadow.etc": {"root": ["R", "W"]},
+        "config_rede.cfg": {"root": ["R", "W"], "net_admin": ["R", "W"]}
+      },
+      "processos": [
+        {
+          "nome": "Malware_01", "usuario": "guest",
+          "passos": [
+            {"acao": "bloquear", "arquivo": "shadow.etc", "modo": "W"}
+          ]
+        },
+        {
+          "nome": "Script_Kiddie", "usuario": "estagiario",
+          "passos": [
+            {"acao": "bloquear", "arquivo": "config_rede.cfg", "modo": "W"}
+          ]
+        },
+        {
+          "nome": "Backup_Oficial", "usuario": "root",
+          "passos": [
+            {"acao": "bloquear", "arquivo": "shadow.etc", "modo": "R"},
+            {"acao": "processar", "tempo": 0.5},
+            {"acao": "liberar", "arquivo": "shadow.etc"}
+          ]
+        }
+      ]
+    },
+    "cenario_9_jantar_dos_filosofos": {
+      "descricao": "Adaptacao do classico problema de concorrencia. 4 processos tentando pegar 4 recursos cruzados simultaneamente. O caos absoluto para o Monitor de Deadlock resolver.",
+      "acl": {
+        "garfo_0": {"filosofo": ["R", "W"]}, "garfo_1": {"filosofo": ["R", "W"]},
+        "garfo_2": {"filosofo": ["R", "W"]}, "garfo_3": {"filosofo": ["R", "W"]}
+      },
+      "processos": [
+        {
+          "nome": "Filosofo_0", "usuario": "filosofo",
+          "passos": [
+            {"acao": "bloquear", "arquivo": "garfo_0", "modo": "W"},
+            {"acao": "processar", "tempo": 0.1},
+            {"acao": "bloquear", "arquivo": "garfo_1", "modo": "W"},
+            {"acao": "liberar", "arquivo": "garfo_0"}, {"acao": "liberar", "arquivo": "garfo_1"}
+          ]
+        },
+        {
+          "nome": "Filosofo_1", "usuario": "filosofo",
+          "passos": [
+            {"acao": "bloquear", "arquivo": "garfo_1", "modo": "W"},
+            {"acao": "processar", "tempo": 0.1},
+            {"acao": "bloquear", "arquivo": "garfo_2", "modo": "W"},
+            {"acao": "liberar", "arquivo": "garfo_1"}, {"acao": "liberar", "arquivo": "garfo_2"}
+          ]
+        },
+        {
+          "nome": "Filosofo_2", "usuario": "filosofo",
+          "passos": [
+            {"acao": "bloquear", "arquivo": "garfo_2", "modo": "W"},
+            {"acao": "processar", "tempo": 0.1},
+            {"acao": "bloquear", "arquivo": "garfo_3", "modo": "W"},
+            {"acao": "liberar", "arquivo": "garfo_2"}, {"acao": "liberar", "arquivo": "garfo_3"}
+          ]
+        },
+        {
+          "nome": "Filosofo_3", "usuario": "filosofo",
+          "passos": [
+            {"acao": "bloquear", "arquivo": "garfo_3", "modo": "W"},
+            {"acao": "processar", "tempo": 0.1},
+            {"acao": "bloquear", "arquivo": "garfo_0", "modo": "W"},
+            {"acao": "liberar", "arquivo": "garfo_3"}, {"acao": "liberar", "arquivo": "garfo_0"}
+          ]
+        }
+      ]
+    }
+  }
